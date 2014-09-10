@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <meta charset='utf-8'>
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <meta name="description" content="BPE : Business Process Engine">
+
+    <link rel="stylesheet" type="text/css" media="screen" href="stylesheets/stylesheet.css">
+
+    <title>BPE</title>
+  </head>
+
+  <body>
+
+    <!-- HEADER -->
+    <div id="header_wrap" class="outer">
+        <header class="inner">
+          <a id="forkme_banner" href="https://github.com/synrc/bpe">View on GitHub</a>
+
+          <h1 id="project_title">BPE</h1>
+          <h2 id="project_tagline">Business Process Engine</h2>
+
+            <section id="downloads">
+              <a class="zip_download_link" href="https://github.com/synrc/bpe/zipball/master">Download this project as a .zip file</a>
+              <a class="tar_download_link" href="https://github.com/synrc/bpe/tarball/master">Download this project as a tar.gz file</a>
+            </section>
+        </header>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="main_content_wrap" class="outer">
+      <section id="main_content" class="inner">
+        <h1>
+<a name="business-process-engine" class="anchor" href="#business-process-engine"><span class="octicon octicon-link"></span></a>Business Process Engine</h1>
+
+<h2>
+<a name="overview" class="anchor" href="#overview"><span class="octicon octicon-link"></span></a>Overview</h2>
+
+<p>BPE is Synrc Cloud Stack Erlang Application that bring Erlang for for Enterprise.
+It provides infrastructure for Workflow Definitions, Process Orchestration,
+Rule Based Production Systems and Distributed Storage.</p>
+
+<h1>
+<a name="workflow-engine" class="anchor" href="#workflow-engine"><span class="octicon octicon-link"></span></a>Workflow Engine</h1>
+
+<p>Workflow Engine -- is an Erlang/OTP application which handles process definitions,
+process instances, and provides very clean API for Workplaces.</p>
+
+<h2>
+<a name="process-schema" class="anchor" href="#process-schema"><span class="octicon octicon-link"></span></a>Process Schema</h2>
+
+<p>Before using Process Engine you need to define the set of business process
+workflows of your enterprise. This could be done via Erlang terms or some DSL
+that lately converted to Erlang terms. Internally BPE uses Eralng terms
+workflow definition:</p>
+
+<div class="highlight highlight-erlang"><pre><span class="nl">#process</span><span class="p">{</span><span class="n">name</span> <span class="o">=</span> <span class="n">'Wire Transfer'</span><span class="p">,</span>
+
+         <span class="n">stages</span> <span class="o">=</span> <span class="p">[</span><span class="nl">#stage</span><span class="p">{</span><span class="n">name</span> <span class="o">=</span> <span class="n">'Request'</span><span class="p">,</span>
+                          <span class="n">roles</span> <span class="o">=</span> <span class="p">[</span><span class="n">department</span><span class="p">],</span>
+                          <span class="n">transitions</span> <span class="o">=</span> <span class="p">[</span><span class="n">'Approve'</span><span class="p">],</span>
+                          <span class="n">action</span> <span class="o">=</span> <span class="p">{</span><span class="n">wt</span><span class="p">,</span><span class="n">request</span><span class="p">,</span>
+                                       <span class="p">[</span><span class="n">'WireTransferReq'</span><span class="p">,</span>
+                                        <span class="p">{</span><span class="n">'Invoice'</span><span class="p">,</span><span class="n">optional</span><span class="p">},</span>
+                                        <span class="p">{</span><span class="n">'Voucher'</span><span class="p">,</span><span class="n">optional</span><span class="p">}]}},</span>
+
+                   <span class="nl">#stage</span><span class="p">{</span><span class="n">name</span> <span class="o">=</span> <span class="n">'Approve'</span><span class="p">,</span>
+                          <span class="n">roles</span> <span class="o">=</span> <span class="p">[</span><span class="n">disbursement</span><span class="p">],</span>
+                          <span class="n">transitions</span> <span class="o">=</span> <span class="p">[</span><span class="n">'Request'</span><span class="p">,</span><span class="n">'Process'</span><span class="p">,</span><span class="n">'Payroll'</span><span class="p">],</span>
+                          <span class="n">action</span> <span class="o">=</span> <span class="p">{</span><span class="n">wt</span><span class="p">,</span><span class="n">approve</span><span class="p">,[</span><span class="n">'Signature'</span><span class="p">]}},</span>
+
+                   <span class="nl">#stage</span><span class="p">{</span><span class="n">name</span> <span class="o">=</span> <span class="n">'Payroll'</span><span class="p">,</span>
+                          <span class="n">roles</span> <span class="o">=</span> <span class="p">[</span><span class="n">payroll</span><span class="p">],</span>
+                          <span class="n">transitions</span> <span class="o">=</span> <span class="p">[</span><span class="n">'Process'</span><span class="p">],</span>
+                          <span class="n">action</span> <span class="o">=</span> <span class="p">{</span><span class="n">wt</span><span class="p">,</span><span class="n">payroll</span><span class="p">,[</span><span class="n">'TaxIssue'</span><span class="p">]}},</span>
+
+                   <span class="nl">#stage</span><span class="p">{</span><span class="n">name</span> <span class="o">=</span> <span class="n">'Process'</span><span class="p">,</span>
+                          <span class="n">roles</span> <span class="o">=</span> <span class="p">[</span><span class="n">disbursement</span><span class="p">],</span>
+                          <span class="n">transitions</span> <span class="o">=</span> <span class="p">[</span><span class="n">'Notify'</span><span class="p">],</span>
+                          <span class="n">action</span> <span class="o">=</span> <span class="p">{</span><span class="n">wt</span><span class="p">,</span><span class="n">process</span><span class="p">,[</span><span class="n">'WireTransaction'</span><span class="p">]}},</span>
+
+                   <span class="nl">#stage</span><span class="p">{</span><span class="n">name</span> <span class="o">=</span> <span class="n">'Notify'</span><span class="p">,</span>
+                          <span class="n">roles</span> <span class="o">=</span> <span class="p">[</span><span class="n">disbursement</span><span class="p">],</span>
+                          <span class="n">transitions</span> <span class="o">=</span> <span class="p">[],</span>
+                          <span class="n">action</span> <span class="o">=</span> <span class="p">{</span><span class="n">wt</span><span class="p">,</span><span class="n">notify</span><span class="p">,[</span><span class="n">'Log'</span><span class="p">]}}],</span>
+         <span class="n">rules</span> <span class="o">=</span> <span class="p">[]}</span>
+</pre></div>
+
+<p>The worklow definiton uses following persistent workflow model which is stored in KVS:</p>
+
+<div class="highlight highlight-erlang"><pre><span class="p">-</span><span class="ni">record</span><span class="p">(</span><span class="nl">process</span><span class="p">,{</span><span class="n">name</span><span class="p">,</span><span class="n">stages</span><span class="p">,</span><span class="n">rules</span><span class="p">}).</span>
+<span class="p">-</span><span class="ni">record</span><span class="p">(</span><span class="nl">stage</span><span class="p">,{</span><span class="n">name</span><span class="p">,</span><span class="n">role</span><span class="p">,</span><span class="n">transitions</span><span class="p">,</span><span class="n">action</span><span class="p">}).</span>
+</pre></div>
+
+<p>This workflow defition consists of two parts: the workflow discriptive structure
+and the compiled workflow rules in Erlang module wt.</p>
+
+<div class="highlight highlight-erlang"><pre><span class="p">-</span><span class="ni">module</span><span class="p">(</span><span class="n">wt</span><span class="p">).</span> <span class="c">% Wire Transfer module</span>
+<span class="p">-</span><span class="ni">export</span><span class="p">([</span><span class="n">request</span><span class="p">,</span><span class="n">approve</span><span class="p">,</span><span class="n">payroll</span><span class="p">,</span><span class="n">process</span><span class="p">,</span><span class="n">notify</span><span class="p">]).</span>
+</pre></div>
+
+<p>Internally the API of process definition looks like:</p>
+
+<div class="highlight highlight-erlang"><pre><span class="nf">load</span><span class="p">(</span><span class="nv">File</span><span class="p">)</span>
+<span class="nf">save</span><span class="p">(</span><span class="nv">File</span><span class="p">)</span>
+<span class="nf">create</span><span class="p">(</span><span class="nv">Process</span><span class="p">)</span>
+<span class="nf">add_stage</span><span class="p">(</span><span class="nv">Process</span><span class="p">,</span><span class="nv">Stage</span><span class="p">)</span>
+<span class="nf">remove_stage</span><span class="p">(</span><span class="nv">Process</span><span class="p">,</span><span class="nv">Stage</span><span class="p">)</span>
+<span class="nf">delete</span><span class="p">(</span><span class="nv">Process</span><span class="p">)</span>
+<span class="nf">definitions</span><span class="p">()</span>
+</pre></div>
+
+<h2>
+<a name="process-instances" class="anchor" href="#process-instances"><span class="octicon octicon-link"></span></a>Process Instances</h2>
+
+<p>Instantiation of process means creating persistent context of document flow.</p>
+
+<div class="highlight highlight-erlang"><pre><span class="nf">start</span><span class="p">(</span><span class="nv">Process</span><span class="p">,</span> <span class="nv">Tasks</span><span class="p">)</span>
+<span class="nf">join</span><span class="p">(</span><span class="nv">Self</span><span class="p">,</span> <span class="nv">Id</span><span class="p">)</span>
+<span class="nf">amend</span><span class="p">(</span><span class="nv">Id</span><span class="p">,</span> <span class="nv">Tasks</span><span class="p">)</span>
+<span class="nf">push</span><span class="p">(</span><span class="nv">Id</span><span class="p">)</span>
+<span class="nf">finish</span><span class="p">(</span><span class="nv">Id</span><span class="p">)</span>
+<span class="nf">history</span><span class="p">(</span><span class="nv">Id</span><span class="p">)</span>
+<span class="nf">tasks</span><span class="p">(</span><span class="nv">Id</span><span class="p">)</span>
+<span class="nf">list</span><span class="p">()</span>
+</pre></div>
+
+<p>Using 'tasks' API you fetch current documents attached to the given
+process at particular stage. Using 'amend' API you could upload or
+change document at current stage. 'push' API move current
+stage documents further by workflow.</p>
+
+<p>Let us see how we could initial 'Wire Transfer' transaction:</p>
+
+<div class="highlight highlight-erlang"><pre><span class="nn">bpe</span><span class="p">:</span><span class="nf">load</span><span class="p">(</span><span class="s">"WireTransfer"</span><span class="p">),</span>
+<span class="nv">Id</span> <span class="o">=</span> <span class="nn">bpe</span><span class="p">:</span><span class="nf">start</span><span class="p">(</span><span class="n">'WireTransfer'</span><span class="p">,[]),</span>
+<span class="p">[]</span> <span class="o">=</span> <span class="nn">bpe</span><span class="p">:</span><span class="nf">tasks</span><span class="p">(</span><span class="nv">Id</span><span class="p">),</span> <span class="c">% current set is empty</span>
+<span class="nv">Tasks</span> <span class="o">=</span> <span class="p">[</span> <span class="nl">#'WireTranswerReq'</span><span class="p">{</span>
+            <span class="n">beneficiary</span> <span class="o">=</span> <span class="nl">#agent</span><span class="p">{</span> <span class="n">bank</span><span class="o">=</span><span class="s">"SBININBB380"</span><span class="p">,</span>
+                                  <span class="n">name</span><span class="o">=</span><span class="s">"Namdak Tonpa"</span><span class="p">,</span>
+                                  <span class="n">account</span><span class="o">=</span><span class="s">"305820317"</span><span class="p">},</span>
+            <span class="n">subsidiary</span> <span class="o">=</span> <span class="nl">#agent</span> <span class="p">{</span> <span class="n">bank</span><span class="o">=</span><span class="s">"BKTRUS33"</span><span class="p">,</span>
+                                  <span class="n">name</span><span class="o">=</span><span class="s">"Maxim Sokhatsky"</span><span class="p">,</span>
+                                  <span class="n">account</span><span class="o">=</span><span class="s">"804250223"</span><span class="p">}}],</span>
+
+<span class="nn">bpe</span><span class="p">:</span><span class="nf">amend</span><span class="p">(</span><span class="nv">Id</span><span class="p">,</span><span class="nv">Tasks</span><span class="p">),</span>
+<span class="nn">bpe</span><span class="p">:</span><span class="nf">push</span><span class="p">(</span><span class="nv">Id</span><span class="p">),</span>
+</pre></div>
+
+<h2>
+<a name="credits" class="anchor" href="#credits"><span class="octicon octicon-link"></span></a>Credits</h2>
+
+<ul>
+<li>Maxim Sokhatsky</li>
+</ul><p>OM A HUM</p>
+      </section>
+    </div>
+
+    <!-- FOOTER  -->
+    <div id="footer_wrap" class="outer">
+      <footer class="inner">
+        <p class="copyright">BPE maintained by <a href="https://github.com/synrc">synrc</a></p>
+        <p>Published with <a href="http://pages.github.com">GitHub Pages</a></p>
+      </footer>
+    </div>
+
+    
+
+  </body>
+</html>
